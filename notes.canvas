@@ -1,0 +1,29 @@
+{
+	"nodes":[
+		{"id":"3a11543508d86731","type":"text","text":"Docker","x":-240,"y":-200,"width":250,"height":50},
+		{"id":"50622239fa0e16e1","type":"text","text":"Namespace","x":-484,"y":365,"width":250,"height":60},
+		{"id":"00ccf6ee835fd2a9","type":"text","text":"le conteneur ne voit que soit même, pour lui il est le seul processus du système","x":-484,"y":585,"width":250,"height":120},
+		{"id":"112bce01157a1de8","type":"text","text":"cgroups","x":-157,"y":360,"width":250,"height":60},
+		{"id":"f81897c1463c8d0e","type":"text","text":"Limite les ressources pour le containeur","x":-157,"y":592,"width":250,"height":113},
+		{"id":"b1515d5d85858760","type":"text","text":"PID ","x":176,"y":365,"width":250,"height":60},
+		{"id":"149006aa7e6f7999","type":"text","text":"Process ID","x":178,"y":595,"width":250,"height":60},
+		{"id":"22d84f83cd8d0728","type":"text","text":"Docker run","x":-880,"y":-720,"width":250,"height":60},
+		{"id":"fcfd1751a3bc89b9","x":-932,"y":-980,"width":354,"height":124,"type":"text","text":"docker run | nginx : | 1.31.2-alpine3.23  \n\ncommande | dépôt/image | tag/version"},
+		{"id":"3aaa51d47ca4f6e6","x":-884,"y":-1185,"width":254,"height":85,"type":"text","text":"nginx utilise fichier d'alpine, mais toujours pas le noyau, on utilise WSL 2"},
+		{"id":"d5df1dd063d53447","x":-496,"y":-679,"width":250,"height":60,"type":"text","text":"Digest"},
+		{"id":"d32b89a7a2f1359e","x":-478,"y":-901,"width":250,"height":60,"type":"text","text":"garantit que l'image est exactement ce qu'on attend"}
+	],
+	"edges":[
+		{"id":"e72d69eaed954519","fromNode":"3a11543508d86731","fromSide":"bottom","toNode":"50622239fa0e16e1","toSide":"top"},
+		{"id":"d899342d156ad965","fromNode":"50622239fa0e16e1","fromSide":"bottom","toNode":"00ccf6ee835fd2a9","toSide":"top"},
+		{"id":"9b172d620a72548d","fromNode":"3a11543508d86731","fromSide":"bottom","toNode":"112bce01157a1de8","toSide":"top"},
+		{"id":"0c335b9bb65583a5","fromNode":"3a11543508d86731","fromSide":"bottom","toNode":"b1515d5d85858760","toSide":"top"},
+		{"id":"c05ddebfbe3460b9","fromNode":"b1515d5d85858760","fromSide":"bottom","toNode":"149006aa7e6f7999","toSide":"top"},
+		{"id":"af55d6988ae52323","fromNode":"3a11543508d86731","fromSide":"top","toNode":"22d84f83cd8d0728","toSide":"bottom"},
+		{"id":"8018ce804804d79f","fromNode":"112bce01157a1de8","fromSide":"bottom","toNode":"f81897c1463c8d0e","toSide":"top"},
+		{"id":"c5f2c2f4d79b39f1","fromNode":"22d84f83cd8d0728","fromSide":"top","toNode":"fcfd1751a3bc89b9","toSide":"bottom"},
+		{"id":"6ad15bbeffb624b7","fromNode":"fcfd1751a3bc89b9","fromSide":"top","toNode":"3aaa51d47ca4f6e6","toSide":"bottom"},
+		{"id":"2d291819c525c178","fromNode":"3a11543508d86731","fromSide":"top","toNode":"d5df1dd063d53447","toSide":"bottom"},
+		{"id":"6ea6d820991f54e4","fromNode":"d5df1dd063d53447","fromSide":"top","toNode":"d32b89a7a2f1359e","toSide":"bottom"}
+	]
+}
