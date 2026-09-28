@@ -1,0 +1,146 @@
+# Version de syntaxe Compose compatible avec Docker Swarm
+version: '3.8'
+
+services:
+  # ==============================================================================
+  # Service Base de données MariaDB
+  # ==============================================================================
+  db:
+    # Image officielle MariaDB (version 11.4 LTS stable)
+    image: mariadb:11.4
+
+    # Variables d'environnement pour la configuration de la base de données
+    environment:
+      # Chemin vers le secret Docker contenant le mot de passe root MariaDB
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      # Nom de la base de données créée automatiquement pour WordPress
+      MYSQL_DATABASE: wordpress
+      # Nom de l'utilisateur dédié créé pour WordPress
+      MYSQL_USER: wp_user
+      # Chemin vers le secret Docker contenant le mot de passe utilisateur
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+
+    # Déclaration des secrets Swarm montés dans le conteneur (/run/secrets/)
+    secrets:
+      - db_root_password
+      - db_password
+
+    # Volume persistant pour stocker les données MariaDB même en cas de redémarrage
+    volumes:
+      - db_data:/var/lib/mysql
+
+    # Réseau overlay isolé pour autoriser uniquement la communication avec WordPress
+    networks:
+      - backend
+
+    # Paramètres de déploiement Docker Swarm
+    deploy:
+      # Une seule réplique car MariaDB standard ne gère pas le multi-instance actif/actif
+      replicas: 1
+      # Contrainte de placement : s'exécute uniquement sur le nœud manager
+      placement:
+        constraints:
+          - node.role == manager
+
+  # ==============================================================================
+  # Service WordPress (PHP-FPM)
+  # ==============================================================================
+  wordpress:
+    # Image officielle WordPress PHP-FPM légère sous Alpine v6.8.2
+    image: wordpress:6.8.2-fpm-alpine
+
+    # Variables d'environnement pour connecter WordPress à MariaDB
+    environment:
+      # Hôte et port du service MariaDB sur le réseau backend
+      WORDPRESS_DB_HOST: db:3306
+      # Nom de la base de données MariaDB à utiliser
+      WORDPRESS_DB_NAME: wordpress
+      # Utilisateur MariaDB pour la connexion
+      WORDPRESS_DB_USER: wp_user
+      # Fichier secret contenant le mot de passe de l'utilisateur MariaDB
+      WORDPRESS_DB_PASSWORD_FILE: /run/secrets/db_password
+
+    # Secret Swarm monté dans le conteneur pour le mot de passe utilisateur
+    secrets:
+      - db_password
+
+    # Volume nommé partagé contenant les fichiers PHP et médias de WordPress
+    volumes:
+      - wp_data:/var/www/html
+
+    # Réseaux overlay : frontend (accès Nginx) et backend (accès MariaDB)
+    networks:
+      - frontend
+      - backend
+
+    # Paramètres de déploiement Docker Swarm
+    deploy:
+      # 2 répliques pour assurer la haute disponibilité et la tolérance aux pannes
+      replicas: 2
+      # Contrainte de placement : s'exécute sur les nœuds workers
+      placement:
+        constraints:
+          - node.role == worker
+
+  # ==============================================================================
+  # Service Nginx (Reverse Proxy & Serveur Web)
+  # ==============================================================================
+  nginx:
+    # Image officielle Nginx v1.28.0 sous Alpine Linux v3.21
+    image: nginx:1.28.0-alpine3.21
+
+    # Ports pointillés sur le réseau hôte (Routing Mesh Swarm)
+    ports:
+      # Redirige le port 80 de l'hôte vers le port 80 du conteneur Nginx
+      - "80:80"
+
+    # Volumes montés dans le conteneur Nginx
+    volumes:
+      # Montage en lecture seule du fichier de configuration du reverse proxy
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # Montage en lecture seule des fichiers statiques WordPress
+      - wp_data:/var/www/html:ro
+
+    # Réseau overlay frontend pour communiquer avec les répliques WordPress
+    networks:
+      - frontend
+
+    # Paramètres de déploiement Docker Swarm
+    deploy:
+      # 2 répliques Nginx réparties pour la répartition de charge
+      replicas: 2
+      # Contrainte de placement : s'exécute sur les nœuds workers
+      placement:
+        constraints:
+          - node.role == worker
+
+# ==============================================================================
+# Volumes nommés persistants
+# ==============================================================================
+volumes:
+  # Volume persistant pour la base de données MariaDB
+  db_data:
+  # Volume pour les fichiers web et médias WordPress
+  wp_data:
+
+# ==============================================================================
+# Réseaux Overlay (créés préalablement avec docker network create)
+# ==============================================================================
+networks:
+  # Réseau frontend pour la communication entre Nginx et WordPress
+  frontend:
+    external: true
+  # Réseau backend pour la communication isolée entre WordPress et MariaDB
+  backend:
+    external: true
+
+# ==============================================================================
+# Secrets Docker Swarm (créés préalablement avec docker secret create)
+# ==============================================================================
+secrets:
+  # Secret pour le mot de passe root MariaDB
+  db_root_password:
+    external: true
+  # Secret pour le mot de passe utilisateur MariaDB
+  db_password:
+    external: true
