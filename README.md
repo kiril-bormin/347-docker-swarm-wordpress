@@ -302,22 +302,61 @@ docker service update --force wp_stack_wordpress
 ```
 Après le redémarrage du service, la connexion au tableau de bord `/wp-admin/` a fonctionné directement du premier coup.
 
+### Déploiement de Swarmpit (Supervision du cluster Swarm)
+
+Conformément au cahier des charges, l'outil open-source **Swarmpit** a été déployé pour superviser l'état du cluster Docker Swarm (services, conteneurs, nœuds, volumes, métriques).
+
+1. **Prérequis matériel :**  
+Le nœud manager héberge à la fois la base MariaDB de WordPress et les services de Swarmpit (Java/Clojure, CouchDB, InfluxDB). Pour éviter toute saturation mémoire et dépassement de délai (timeouts Swarm), le manager nécessite 2 Go de RAM (et 1 Go par worker).
+
+2. **Fichier Compose Swarmpit (`/root/swarmpit/docker-compose.yml`) :**
+Les services déployés sont :
+- `app` : Application Web Swarmpit (`swarmpit/swarmpit:latest`) exposée sur les ports `888` et `8888`
+- `db` : Base de données CouchDB (`couchdb:2.3.0`)
+- `influxdb` : Base métriques temporelles (`influxdb:1.8`)
+- `agent` : Agent déployé en mode global (`swarmpit/agent:latest`) sur l'ensemble des 3 nœuds
+
+3. **Déploiement depuis le manager :**
+```bash
+cd /root/swarmpit
+docker stack deploy -c docker-compose.yml swarmpit
+```
+
+4. **Vérification de l'état des services :**
+```bash
+docker stack services swarmpit
+docker stack ps swarmpit
+```
+Tous les composants doivent afficher le statut `Running` :
+- `swarmpit_app` : 1/1
+- `swarmpit_db` : 1/1
+- `swarmpit_influxdb` : 1/1
+- `swarmpit_agent` : 3/3 (1 réplique par nœud)
+
+5. **Accès au tableau de bord :**
+Depuis le navigateur de la machine hôte :
+- `http://10.228.242.207:8888` (ou `http://10.228.242.207:888`)
+Créez votre compte administrateur lors de votre première connexion pour accéder à l'interface de gestion du cluster.
+
 ### Commandes pour supprimer totalement la stack et ses données
 
 Pour supprimer complètement la stack Swarm ainsi que les volumes, secrets et réseaux associés :
 
 ```bash
-# Suppression de la stack (arrête et supprime tous les conteneurs et services)
+# Suppression de la stack WordPress
 docker stack rm wp_stack
 
-# Suppression des volumes persistants MariaDB et WordPress
-docker volume rm wp_stack_db_data wp_stack_wp_data
+# Suppression de la stack Swarmpit
+docker stack rm swarmpit
+
+# Suppression des volumes persistants
+docker volume rm wp_stack_db_data wp_stack_wp_data swarmpit_db-data swarmpit_influx-data
 
 # Suppression des secrets Docker
 docker secret rm db_root_password db_password
 
 # Suppression des réseaux overlay
-docker network rm frontend backend
+docker network rm frontend backend swarmpit_net
 ```
 
 
