@@ -79,6 +79,7 @@ services:
       replicas: 2
       # Contrainte de placement : s'exécute sur les nœuds workers
       placement:
+        max_replicas_per_node: 1
         constraints:
           - node.role == worker
 
@@ -111,6 +112,7 @@ services:
       replicas: 2
       # Contrainte de placement : s'exécute sur les nœuds workers
       placement:
+        max_replicas_per_node: 1
         constraints:
           - node.role == worker
 

@@ -178,6 +178,7 @@ services:
       replicas: 2
       # Contrainte de placement : s'exécute sur les nœuds workers
       placement:
+        max_replicas_per_node: 1
         constraints:
           - node.role == worker
 
@@ -210,6 +211,7 @@ services:
       replicas: 2
       # Contrainte de placement : s'exécute sur les nœuds workers
       placement:
+        max_replicas_per_node: 1
         constraints:
           - node.role == worker
 
@@ -359,4 +361,9 @@ docker secret rm db_root_password db_password
 docker network rm frontend backend swarmpit_net
 ```
 
+### Utilisation de l'IA
+J'ai utilisé de l'IA comme tuteur afin de m'aider avec certains concept/commandes que je connaissais pas encore.
+
+### Conclusion personelle
+J'ai trouvé que ce projet a été très intéressant à découvrir et pratiquer, j'ai appris à créer des cluster Docker Swarm, et de gérer des services avec. 
 
